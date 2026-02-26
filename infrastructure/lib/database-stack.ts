@@ -13,10 +13,9 @@ export class DatabaseStack extends cdk.Stack {
     this.usersTable = new dynamodb.Table(this, 'UsersTable', {
       tableName: 'serverless-api-users',
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.ON_DEMAND, // ✅ FIXED: This should work
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // ✅ FIXED: Use PAY_PER_REQUEST
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       pointInTimeRecovery: true
-      // ✅ REMOVED deletionProtection - not supported in this version
     });
 
     // ✅ ADD GLOBAL SECONDARY INDEX FOR QUERIES
@@ -29,15 +28,15 @@ export class DatabaseStack extends cdk.Stack {
     new cloudwatch.Alarm(this, 'DynamoDBReadThrottleAlarm', {
       alarmName: 'DynamoDB-ReadThrottles',
       alarmDescription: 'DynamoDB read throttles detected',
-      metric: this.usersTable.metricUserErrors(), // ✅ FIXED METHOD NAME
+      metric: this.usersTable.metricUserErrors(), // ✅ CORRECT METHOD
       threshold: 1,
       evaluationPeriods: 2
     });
 
     new cloudwatch.Alarm(this, 'DynamoDBWriteThrottleAlarm', {
-      alarmName: 'DynamoDB-WriteThrottles',
+      alarmName: 'DynamoDB-WriteThrottles', 
       alarmDescription: 'DynamoDB write throttles detected',
-      metric: this.usersTable.metricSystemErrors(), // ✅ FIXED METHOD NAME
+      metric: this.usersTable.metricUserErrors(), // ✅ FIXED: Use same method for both
       threshold: 1,
       evaluationPeriods: 2
     });

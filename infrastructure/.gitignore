@@ -1,8 +1,26 @@
+# Compiled output
 *.js
-!jest.config.js
 *.d.ts
-node_modules
+*.js.map
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Dependencies
+node_modules/
+package-lock.json
+
+# CDK output
+cdk.out/
+cdk.context.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Keep these JS files (if any)
+!jest.config.js

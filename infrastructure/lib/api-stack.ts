@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigatewayv2 from '@aws-cdk/aws-apigatewayv2-alpha'; // ✅ FIXED IMPORT
-import * as integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha'; // ✅ FIXED IMPORT
+import * as apigateway from 'aws-cdk-lib/aws-apigateway'; // ✅ USE REST API (STABLE)
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
@@ -13,7 +12,7 @@ export interface ApiStackProps extends cdk.StackProps {
 
 export class ApiStack extends cdk.Stack {
   public readonly lambdaFunctions: lambda.Function[] = [];
-  public readonly httpApi: apigatewayv2.HttpApi;
+  public readonly restApi: apigateway.RestApi;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -40,8 +39,6 @@ export class ApiStack extends cdk.Stack {
         USERS_TABLE: props.usersTable.tableName,
         LOG_LEVEL: 'INFO'
       },
-      // ✅ REMOVED logGroup - not supported in this CDK version
-      // logGroup: getUserLogGroup,
       tracing: lambda.Tracing.ACTIVE,
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
@@ -56,8 +53,6 @@ export class ApiStack extends cdk.Stack {
         USERS_TABLE: props.usersTable.tableName,
         LOG_LEVEL: 'INFO'
       },
-      // ✅ REMOVED logGroup - not supported in this CDK version
-      // logGroup: createUserLogGroup,
       tracing: lambda.Tracing.ACTIVE,
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
@@ -78,34 +73,46 @@ export class ApiStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
-    // ✅ HTTP API GATEWAY WITH LOGGING
-    this.httpApi = new apigatewayv2.HttpApi(this, 'ServerlessApi', {
-      apiName: 'serverless-api-starter',
+    // ✅ REST API GATEWAY (STABLE VERSION)
+    this.restApi = new apigateway.RestApi(this, 'ServerlessApi', {
+      restApiName: 'serverless-api-starter',
       description: 'Serverless API Starter with monitoring',
-      corsPreflight: {
-        allowOrigins: ['*'],
-        allowMethods: [apigatewayv2.CorsHttpMethod.ANY],
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: ['*']
+      },
+      deployOptions: {
+        stageName: 'prod',
+        accessLogDestination: new apigateway.LogGroupLogDestination(apiLogGroup),
+        accessLogFormat: apigateway.AccessLogFormat.jsonWithStandardFields({
+          caller: false,
+          httpMethod: true,
+          ip: true,
+          protocol: true,
+          requestTime: true,
+          resourcePath: true,
+          responseLength: true,
+          status: true,
+          user: true
+        })
       }
     });
 
-    // Add routes
-    this.httpApi.addRoutes({
-      path: '/users/{userId}',
-      methods: [apigatewayv2.HttpMethod.GET],
-      integration: new integrations.HttpLambdaIntegration('GetUserIntegration', getUserFunction)
-    });
-
-    this.httpApi.addRoutes({
-      path: '/users',
-      methods: [apigatewayv2.HttpMethod.POST],
-      integration: new integrations.HttpLambdaIntegration('CreateUserIntegration', createUserFunction)
-    });
+    // ✅ CREATE API RESOURCES AND METHODS
+    const usersResource = this.restApi.root.addResource('users');
+    
+    // GET /users/{userId}
+    const userResource = usersResource.addResource('{userId}');
+    userResource.addMethod('GET', new apigateway.LambdaIntegration(getUserFunction));
+    
+    // POST /users
+    usersResource.addMethod('POST', new apigateway.LambdaIntegration(createUserFunction));
 
     // ✅ OUTPUT API URL
     new cdk.CfnOutput(this, 'ApiUrl', {
-      value: this.httpApi.url!,
-      description: 'HTTP API Gateway URL'
+      value: this.restApi.url,
+      description: 'REST API Gateway URL'
     });
   }
 }

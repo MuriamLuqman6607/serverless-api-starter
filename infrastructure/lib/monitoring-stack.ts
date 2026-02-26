@@ -83,58 +83,62 @@ export class MonitoringStack extends cdk.Stack {
     }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
   }
 
-  private createApiGatewayAlarms(apiName: string) {
-    // API Gateway 4XX Errors
-    new cloudwatch.Alarm(this, 'ApiGateway4XXAlarm', {
-      alarmName: `${apiName}-High4XXErrors`,
-      alarmDescription: 'High 4XX error rate on API Gateway',
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ApiGateway',
-        metricName: '4XXError',
-        dimensionsMap: {
-          ApiName: apiName
-        },
-        period: cdk.Duration.minutes(5),
-        statistic: 'Sum'
-      }),
-      threshold: 10,
-      evaluationPeriods: 2
-    }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
+private createApiGatewayAlarms(apiName: string) {
+  // API Gateway 4XX Errors
+  new cloudwatch.Alarm(this, 'ApiGateway4XXAlarm', {
+    alarmName: `${apiName}-High4XXErrors`,
+    alarmDescription: 'High 4XX error rate on API Gateway',
+    metric: new cloudwatch.Metric({
+      namespace: 'AWS/ApiGateway',
+      metricName: '4XXError',
+      dimensionsMap: {
+        ApiName: apiName,
+        Stage: 'prod' // ✅ ADD STAGE DIMENSION
+      },
+      period: cdk.Duration.minutes(5),
+      statistic: 'Sum'
+    }),
+    threshold: 10,
+    evaluationPeriods: 2
+  }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
-    // API Gateway 5XX Errors
-    new cloudwatch.Alarm(this, 'ApiGateway5XXAlarm', {
-      alarmName: `${apiName}-High5XXErrors`,
-      alarmDescription: 'High 5XX error rate on API Gateway',
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ApiGateway',
-        metricName: '5XXError',
-        dimensionsMap: {
-          ApiName: apiName
-        },
-        period: cdk.Duration.minutes(5),
-        statistic: 'Sum'
-      }),
-      threshold: 5,
-      evaluationPeriods: 1
-    }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
+  // API Gateway 5XX Errors
+  new cloudwatch.Alarm(this, 'ApiGateway5XXAlarm', {
+    alarmName: `${apiName}-High5XXErrors`,
+    alarmDescription: 'High 5XX error rate on API Gateway',
+    metric: new cloudwatch.Metric({
+      namespace: 'AWS/ApiGateway',
+      metricName: '5XXError',
+      dimensionsMap: {
+        ApiName: apiName,
+        Stage: 'prod' // ✅ ADD STAGE DIMENSION
+      },
+      period: cdk.Duration.minutes(5),
+      statistic: 'Sum'
+    }),
+    threshold: 5,
+    evaluationPeriods: 1
+  }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
 
-    // API Gateway Latency
-    new cloudwatch.Alarm(this, 'ApiGatewayLatencyAlarm', {
-      alarmName: `${apiName}-HighLatency`,
-      alarmDescription: 'High latency on API Gateway',
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ApiGateway',
-        metricName: 'Latency',
-        dimensionsMap: {
-          ApiName: apiName
-        },
-        period: cdk.Duration.minutes(5),
-        statistic: 'Average'
-      }),
-      threshold: 2000, // 2 seconds
-      evaluationPeriods: 3
-    }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
-  }
+  // API Gateway Latency
+  new cloudwatch.Alarm(this, 'ApiGatewayLatencyAlarm', {
+    alarmName: `${apiName}-HighLatency`,
+    alarmDescription: 'High latency on API Gateway',
+    metric: new cloudwatch.Metric({
+      namespace: 'AWS/ApiGateway',
+      metricName: 'Latency',
+      dimensionsMap: {
+        ApiName: apiName,
+        Stage: 'prod' // ✅ ADD STAGE DIMENSION
+      },
+      period: cdk.Duration.minutes(5),
+      statistic: 'Average'
+    }),
+    threshold: 2000, // 2 seconds
+    evaluationPeriods: 3
+  }).addAlarmAction(new cloudwatchActions.SnsAction(this.alarmTopic));
+}
+
 
   private createCostAlarm() {
     // Monthly cost alarm to stay within $20 budget
