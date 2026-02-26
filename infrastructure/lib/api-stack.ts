@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
-import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as apigatewayv2 from '@aws-cdk/aws-apigatewayv2-alpha'; // ✅ FIXED IMPORT
+import * as integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha'; // ✅ FIXED IMPORT
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
@@ -40,14 +40,11 @@ export class ApiStack extends cdk.Stack {
         USERS_TABLE: props.usersTable.tableName,
         LOG_LEVEL: 'INFO'
       },
-      logGroup: getUserLogGroup,
-      // ✅ ENABLE X-RAY TRACING
+      // ✅ REMOVED logGroup - not supported in this CDK version
+      // logGroup: getUserLogGroup,
       tracing: lambda.Tracing.ACTIVE,
-      // ✅ SET TIMEOUT
       timeout: cdk.Duration.seconds(30),
-      // ✅ MEMORY CONFIGURATION
       memorySize: 256,
-      // ✅ ARM ARCHITECTURE FOR COST SAVINGS
       architecture: lambda.Architecture.ARM_64
     });
 
@@ -59,7 +56,8 @@ export class ApiStack extends cdk.Stack {
         USERS_TABLE: props.usersTable.tableName,
         LOG_LEVEL: 'INFO'
       },
-      logGroup: createUserLogGroup,
+      // ✅ REMOVED logGroup - not supported in this CDK version
+      // logGroup: createUserLogGroup,
       tracing: lambda.Tracing.ACTIVE,
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
@@ -88,28 +86,6 @@ export class ApiStack extends cdk.Stack {
         allowOrigins: ['*'],
         allowMethods: [apigatewayv2.CorsHttpMethod.ANY],
         allowHeaders: ['*']
-      }
-    });
-
-    // ✅ CREATE API GATEWAY STAGE WITH LOGGING
-    const stage = new apigatewayv2.HttpStage(this, 'ApiStage', {
-      httpApi: this.httpApi,
-      stageName: 'prod',
-      autoDeploy: true,
-      accessLogSettings: {
-        destinationArn: apiLogGroup.logGroupArn,
-        format: JSON.stringify({
-          requestId: '$context.requestId',
-          ip: '$context.identity.sourceIp',
-          requestTime: '$context.requestTime',
-          httpMethod: '$context.httpMethod',
-          routeKey: '$context.routeKey',
-          status: '$context.status',
-          protocol: '$context.protocol',
-          responseLength: '$context.responseLength',
-          error: '$context.error.message',
-          integrationError: '$context.integrationErrorMessage'
-        })
       }
     });
 
