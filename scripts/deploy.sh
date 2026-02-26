@@ -36,5 +36,3 @@ echo "🎯 Next Steps:"
 echo "1. Confirm SNS email subscription"
 echo "2. Test API endpoints"
 echo "3. Check CloudWatch logs and metrics"
-
-
