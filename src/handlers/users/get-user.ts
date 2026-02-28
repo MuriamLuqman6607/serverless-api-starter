@@ -1,91 +1,77 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-// ✅ STRUCTURED LOGGING FUNCTION
-const log = (level: string, message: string, data?: any) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    level,
-    message,
-    requestId: process.env.AWS_REQUEST_ID, // ✅ FIXED: process is now available
-    functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-    functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
-    ...(data && { data })
-  };
-  console.log(JSON.stringify(logEntry));
-};
-
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  console.log('Event:', JSON.stringify(event, null, 2));
   
-  log('INFO', 'Get user function invocation started', {
-    httpMethod: event.httpMethod,
-    path: event.path,
-    userId: event.pathParameters?.userId
-  });
-
   try {
     const userId = event.pathParameters?.userId;
-    
+
     if (!userId) {
-      log('WARN', 'Missing userId parameter');
       return {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
         },
-        body: JSON.stringify({ error: 'userId parameter is required' })
+        body: JSON.stringify({ error: 'User ID is required' })
       };
     }
 
-    log('INFO', 'Querying DynamoDB', { 
-      userId, 
-      tableName: process.env.USERS_TABLE 
-    });
-
-    const result = await docClient.send(new GetCommand({
-      TableName: process.env.USERS_TABLE,
+    // Get user from DynamoDB
+    const command = new GetCommand({
+      TableName: process.env.USERS_TABLE_NAME,
       Key: { userId }
-    }));
-
-    log('INFO', 'Successfully retrieved user', { 
-      userId, 
-      found: !!result.Item,
-      remainingTime: context.getRemainingTimeInMillis()
     });
+
+    const result = await docClient.send(command);
+
+    if (!result.Item) {
+      return {
+        statusCode: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        },
+        body: JSON.stringify({ error: 'User not found' })
+      };
+    }
+
+    console.log('User retrieved successfully:', result.Item);
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
       },
-      body: JSON.stringify(result.Item || { message: 'User not found' })
+      body: JSON.stringify(result.Item)
     };
 
   } catch (error) {
-    log('ERROR', 'Get user function failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      userId: event.pathParameters?.userId
-    });
-
+    console.error('Error getting user:', error);
+    
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
       },
       body: JSON.stringify({ 
         error: 'Internal server error',
-        requestId: context.awsRequestId
+        requestId: event.requestContext?.requestId 
       })
     };
   }

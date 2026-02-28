@@ -1,19 +1,13 @@
 {
   "name": "serverless-api-functions",
   "version": "1.0.0",
-  "description": "Lambda functions for serverless API",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.0.0",
-    "@aws-sdk/lib-dynamodb": "^3.0.0"
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.0",
-    "@types/node": "^18.0.0",
-    "typescript": "^4.9.0"
+    "@types/uuid": "^9.0.0"
   }
 }
