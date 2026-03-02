@@ -1,11 +1,10 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+exports.handler = async (event) => {
   console.log('Event:', JSON.stringify(event, null, 2));
   
   try {
@@ -16,15 +15,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+          'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({ error: 'User ID is required' })
       };
     }
 
-    // Get user from DynamoDB
     const command = new GetCommand({
       TableName: process.env.USERS_TABLE,
       Key: { userId }
@@ -37,41 +33,33 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         statusCode: 404,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+          'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({ error: 'User not found' })
       };
     }
 
-    console.log('User retrieved successfully:', result.Item);
-
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify(result.Item)
     };
 
   } catch (error) {
-    console.error('Error getting user:', error);
+    console.error('Error:', error);
     
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({ 
         error: 'Internal server error',
-        requestId: event.requestContext?.requestId 
+        message: error.message
       })
     };
   }
