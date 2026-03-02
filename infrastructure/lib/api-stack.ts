@@ -8,13 +8,8 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // DynamoDB Table
-    const usersTable = new dynamodb.Table(this, 'UsersTable', {
-      tableName: 'serverless-api-users',
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    // Reference existing DynamoDB Table (don't create new one)
+    const usersTable = dynamodb.Table.fromTableName(this, 'UsersTable', 'serverless-api-users');
 
     // Lambda Functions
     const createUserFunction = new lambda.Function(this, 'CreateUserFunction', {
@@ -67,17 +62,6 @@ export class ApiStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'ServerlessApiEndpoint', {
       value: api.url,
-    });
-
-    // Export function names for reference
-    new cdk.CfnOutput(this, 'CreateUserFunctionName', {
-      value: createUserFunction.functionName,
-      exportName: 'CreateUserFunctionName'
-    });
-
-    new cdk.CfnOutput(this, 'GetUserFunctionName', {
-      value: getUserFunction.functionName,
-      exportName: 'GetUserFunctionName'
     });
   }
 }
