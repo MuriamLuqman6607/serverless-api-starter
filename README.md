@@ -1,61 +1,49 @@
-# 🚀 Serverless API Starter with Comprehensive Monitoring
+# Serverless User Management API
 
-A production-ready serverless API built with AWS CDK, featuring comprehensive monitoring, logging, and alerting capabilities.
+A production-ready serverless REST API built with AWS CDK, Lambda, DynamoDB, and API Gateway.
 
-## 🏗️ Architecture
+## 🚀 Live API Endpoints
 
-![Architecture Diagram](docs/architecture-diagram.png)
+**Base URL:** `https://ww3w89j11c.execute-api.ap-east-1.amazonaws.com/prod`
 
-### Components
-- **API Gateway REST API** - RESTful endpoints with CORS support
-- **AWS Lambda Functions** - Serverless compute with structured logging
-- **DynamoDB** - NoSQL database with on-demand billing
-- **CloudWatch** - Comprehensive monitoring and alerting
-- **SNS** - Email notifications for critical alerts
-- **AWS Cognito** - User authentication and authorization
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/users` | Create a new user |
+| GET | `/users/{userId}` | Get user by ID |
 
-## 📊 Features
+## 📋 API Documentation
 
-✅ **Production-Ready Infrastructure**
-- Infrastructure as Code using AWS CDK
-- Multi-stack architecture for better organization
-- Comprehensive error handling and logging
-
-✅ **Monitoring & Observability**
-- CloudWatch dashboards with key metrics
-- Automated alarms for errors, latency, and throttling
-- SNS notifications for critical issues
-- Structured JSON logging for all Lambda functions
-
-✅ **Security Best Practices**
-- IAM roles with least privilege access
-- API Gateway with proper CORS configuration
-- Cognito user pool for authentication
-- VPC-ready architecture
-
-✅ **Developer Experience**
-- TypeScript throughout the stack
-- Automated testing capabilities
-- Easy deployment with single command
-- Comprehensive documentation
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+
-- AWS CLI configured
-- AWS CDK installed globally
-
-### Deployment
+### Create User
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR-USERNAME/serverless-api-starter.git
-cd serverless-api-starter
+POST /users
+Content-Type: application/json
 
-# Install dependencies
-cd infrastructure
-npm install
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
 
-# Deploy to AWS
-cdk bootstrap
-cdk deploy --all --require-approval never
+Response:
+
+{
+  "userId": "32d97b99-2e6b-4fcc-a18d-3360af47d72e",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "createdAt": "2026-03-02T13:50:53.149Z"
+}
+
+🏗️ Architecture
+AWS Lambda - Serverless compute
+Amazon DynamoDB - NoSQL database
+API Gateway - REST API management
+AWS CDK - Infrastructure as Code
+CloudWatch - Monitoring and logging
+🛠️ Technologies Used
+TypeScript/JavaScript
+AWS CDK
+AWS Lambda
+Amazon DynamoDB
+API Gateway
+Node.js 18.x
+📊 Features
+✅ RESTful API design ✅ CORS enabled ✅ Error handling ✅ Input validation ✅ Serverless architecture ✅ Infrastructure as Code ✅ Production-ready logging
