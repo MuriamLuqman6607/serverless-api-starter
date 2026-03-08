@@ -137,6 +137,37 @@ export class ApiStack extends cdk.Stack {
       alarmDescription: 'Lambda function error rate is too high'
     });
 
+    // CloudWatch Dashboard
+    const dashboard = new cloudwatch.Dashboard(this, 'ApiDashboard', {
+      dashboardName: 'serverless-api-dashboard',
+      widgets: [
+        [
+          new cloudwatch.GraphWidget({
+            title: 'API Gateway Requests',
+            left: [api.metricCount()],
+            width: 12,
+          }),
+          new cloudwatch.GraphWidget({
+            title: 'API Gateway Latency',
+            left: [api.metricLatency()],
+            width: 12,
+          }),
+        ],
+        [
+          new cloudwatch.GraphWidget({
+            title: 'Lambda Invocations',
+            left: [createUserFunction.metricInvocations(), getUserFunction.metricInvocations()],
+            width: 12,
+          }),
+          new cloudwatch.GraphWidget({
+            title: 'Lambda Errors',
+            left: [createUserFunction.metricErrors(), getUserFunction.metricErrors()],
+            width: 12,
+          }),
+        ],
+      ],
+    });
+
     // Outputs
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.url,
@@ -152,6 +183,11 @@ export class ApiStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'ServerlessApiEndpoint', {
       value: api.url,
+    });
+
+    // Add dashboard URL to outputs
+    new cdk.CfnOutput(this, 'DashboardUrl', {
+      value: `https://console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`,
     });
   }
 }
